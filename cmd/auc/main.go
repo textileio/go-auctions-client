@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/textileio/bidbot/lib/common"
+	"github.com/textileio/go-auctions-client/common"
 	logger "github.com/textileio/go-log/v2"
 )
 
@@ -44,6 +44,7 @@ func init() {
 	walletCmd.AddCommand(walletDaemonCmd)
 	common.ConfigureCLI(v, envPrefix, []common.Flag{
 		{Name: "wallet-keys", DefValue: []string{}, Description: "Wallet address keys"},
+		{Name: "auth-token", DefValue: "", Description: "Authorization token to validate signing requests"},
 	}, walletDaemonCmd.Flags())
 
 }

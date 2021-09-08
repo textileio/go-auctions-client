@@ -1,12 +1,11 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/libp2p/go-libp2p"
 	"github.com/spf13/cobra"
-	"github.com/textileio/bidbot/buildinfo"
-	"github.com/textileio/bidbot/lib/common"
+	"github.com/textileio/go-auctions-client/buildinfo"
+	"github.com/textileio/go-auctions-client/common"
+	"github.com/textileio/go-auctions-client/localwallet"
 	"github.com/textileio/go-auctions-client/propsigner"
 )
 
@@ -36,10 +35,10 @@ var walletDaemonCmd = &cobra.Command{
 		common.CheckErrf("marshaling config: %v", err)
 		log.Infof("loaded config from %s: %s", v.ConfigFileUsed(), string(settings))
 
-		walletMap := v.GetStringMapString("wallet-keys")
-		for k, v := range walletMap {
-			fmt.Printf("%s: %s\n", k, v)
-		}
+		authToken := v.GetString("auth-token")
+		walletKeys := v.GetStringSlice("wallet-keys")
+		wallet, err := localwallet.New(walletKeys)
+		common.CheckErrf("creating local wallet: %s", err)
 
 		h, err := libp2p.New(c.Context())
 		common.CheckErrf("creating libp2p host: %s", err)

@@ -6,6 +6,7 @@ import (
 	"io"
 	"time"
 
+	"github.com/filecoin-project/go-state-types/crypto"
 	"github.com/filecoin-project/specs-actors/actors/builtin/market"
 	"github.com/libp2p/go-libp2p-core/host"
 	"github.com/libp2p/go-libp2p-core/network"
@@ -31,7 +32,7 @@ var (
 
 type Wallet interface {
 	Has(addr string) (bool, error)
-	Sign(payload []byte) ([]byte, error)
+	Sign(addr string, payload []byte) (*crypto.Signature, error)
 }
 
 type dealSignerService struct {
@@ -40,6 +41,9 @@ type dealSignerService struct {
 }
 
 func NewDealSignerService(h host.Host, authToken string, wallet Wallet) error {
+	if authToken == "" {
+		return fmt.Errorf("authorization token is empty")
+	}
 	dss := dealSignerService{
 		authToken: authToken,
 		wallet:    wallet,
@@ -70,6 +74,7 @@ func (dss *dealSignerService) streamHandler(s network.Stream) {
 		return
 	}
 
+	var walletAddr string
 	switch req.FilecoinDealProtocol {
 	case filecoinDealProtocolV1:
 		var proposal market.DealProposal
@@ -81,18 +86,24 @@ func (dss *dealSignerService) streamHandler(s network.Stream) {
 			replyWithError(s, "validating deal proposal: %s", err)
 			return
 		}
+		walletAddr = proposal.Client.String()
 	default:
 		replyWithError(s, "unsupported filecoin deal proposal protocol")
 		return
 	}
 
-	sig, err := dss.wallet.Sign(req.Payload)
+	sig, err := dss.wallet.Sign(walletAddr, req.Payload)
 	if err != nil {
 		replyWithError(s, "signing proposal: %s", err)
 		return
 	}
+	sigBytes, err := sig.MarshalBinary()
+	if err != nil {
+		replyWithError(s, "marshaling signature: %s", err)
+		return
+	}
 	res := pb.ProposalSigningResponse{
-		Signature: sig,
+		Signature: sigBytes,
 	}
 	buf, err = proto.Marshal(&res)
 	if err != nil {
