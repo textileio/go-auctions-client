@@ -19,11 +19,11 @@ lint:
 
 
 build: 
-	$(BIN_BUILD_FLAGS) go build -ldflags="${GOVVV_FLAGS}" .
+	$(BIN_BUILD_FLAGS) go build -ldflags="${GOVVV_FLAGS}" ./cmd/auc
 .PHONY: build
 
 install: 
-	$(BIN_BUILD_FLAGS) go install -ldflags="${GOVVV_FLAGS}" .
+	$(BIN_BUILD_FLAGS) go install -ldflags="${GOVVV_FLAGS}" ./cmd/auc
 .PHONY: install
 
 protos: $(PROTOC_GEN_GO) $(PROTOC_GEN_GO_GRPC) clean-protos
