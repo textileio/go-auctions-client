@@ -12,7 +12,6 @@ import (
 	"github.com/libp2p/go-libp2p-core/network"
 	pb "github.com/textileio/go-auctions-client/gen/wallet"
 	logger "github.com/textileio/go-log/v2"
-	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -123,15 +122,10 @@ func replyWithError(s network.Stream, format string, params ...interface{}) {
 	str := fmt.Sprintf(format, params...)
 	log.Errorf(str)
 
-	res := pb.ProposalSigningResponse{
+	res := &pb.ProposalSigningResponse{
 		Error: str,
 	}
-	buf, err := proto.Marshal(&res)
-	if err != nil {
-		log.Errorf("marshaling error response: %s", err)
-		return
-	}
-	if _, err := s.Write(buf); err != nil {
+	if err := writeMsg(s, res); err != nil {
 		log.Errorf("writing error response to stream: %s", err)
 		return
 	}

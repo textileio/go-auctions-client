@@ -48,6 +48,10 @@ func RequestSignatureV1(
 		return nil, fmt.Errorf("unmarshaling proto deal signing response: %s", err)
 	}
 
+	if res.Error != "" {
+		return nil, fmt.Errorf("response managed error: %s", res.Error)
+	}
+
 	var sig crypto.Signature
 	if err := sig.UnmarshalBinary(res.Signature); err != nil {
 		return nil, fmt.Errorf("unmarshaling signature cbor bytes: %s", err)
