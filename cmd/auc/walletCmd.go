@@ -41,51 +41,15 @@ var walletDaemonCmd = &cobra.Command{
 			fmt.Printf("%s: %s\n", k, v)
 		}
 
-		//fin := finalizer.NewFinalizer()
-
 		h, err := libp2p.New(c.Context())
 		common.CheckErrf("creating libp2p host: %s", err)
 
-		err = propsigner.HandleV1(h)
-		common.CheckErrf("configuring proposal signer v1: %s", err)
-
-		///////////////////////
-		/*
-			config := service.Config{
-				Peer: pconfig,
-				BidParams: service.BidParams{
-					StorageProviderID:       storageProviderID,
-					WalletAddrSig:           walletAddrSig,
-					AskPrice:                v.GetInt64("ask-price"),
-					VerifiedAskPrice:        v.GetInt64("verified-ask-price"),
-					FastRetrieval:           v.GetBool("fast-retrieval"),
-					DealStartWindow:         v.GetUint64("deal-start-window"),
-					DealDataDirectory:       dealDataDirectory,
-					DealDataFetchAttempts:   v.GetUint32("deal-data-fetch-attempts"),
-					DealDataFetchTimeout:    v.GetDuration("deal-data-fetch-timeout"),
-					DiscardOrphanDealsAfter: v.GetDuration("discard-orphan-deals-after"),
-				},
-				AuctionFilters: service.AuctionFilters{
-					DealDuration: service.MinMaxFilter{
-						Min: v.GetUint64("deal-duration-min"),
-						Max: v.GetUint64("deal-duration-max"),
-					},
-					DealSize: service.MinMaxFilter{
-						Min: v.GetUint64("deal-size-min"),
-						Max: v.GetUint64("deal-size-max"),
-					},
-				},
-				BytesLimiter:        bytesLimiter,
-				ConcurrentImports:   v.GetInt("concurrent-imports-limit"),
-				SealingSectorsLimit: v.GetInt("sealing-sectors-limit"),
-			}
-			serv, err := service.New(config, store, lc, fc)
-			common.CheckErrf("starting service: %v", err)
-			fin.Add(serv)
-		*/
+		err = propsigner.NewDealSignerService(h, authToken, wallet)
+		common.CheckErrf("creating deal signer service: %s", err)
 
 		common.HandleInterrupt(func() {
-			//common.CheckErr(fin.Cleanupf("closing service: %v", nil))
+			err := h.Close()
+			common.CheckErrf("closing libp2p host: %s", err)
 		})
 	},
 }
