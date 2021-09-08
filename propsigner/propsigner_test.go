@@ -1,16 +1,17 @@
 package propsigner
 
 import (
+	"bytes"
 	"context"
 	"testing"
 
 	"github.com/filecoin-project/go-address"
-	cborutil "github.com/filecoin-project/go-cbor-util"
 	"github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/go-state-types/crypto"
 	"github.com/filecoin-project/specs-actors/actors/builtin/market"
 	"github.com/ipfs/go-cid"
 	libwal "github.com/jsign/go-filsigner/wallet"
+	"github.com/libp2p/go-libp2p-core/peer"
 	swarmt "github.com/libp2p/go-libp2p-swarm/testing"
 	bhost "github.com/libp2p/go-libp2p/p2p/host/basic"
 	"github.com/stretchr/testify/require"
@@ -37,7 +38,7 @@ type testCase struct {
 func TestProposalSigning(t *testing.T) {
 	t.Parallel()
 
-	authToken := "authztoken"
+	authToken := "veryhardtokentoguess"
 	wallet, err := localwallet.New(walletKeys)
 	require.NoError(t, err)
 
@@ -80,13 +81,13 @@ func TestProposalSigning(t *testing.T) {
 			defer cancel()
 
 			// Remote wallet libp2p host.
-			h1, err := bhost.NewHost(ctx, swarmt.GenSwarm(t, ctx), nil)
-			require.NoError(t, err)
+			h1 := bhost.New(swarmt.GenSwarm(t, ctx))
 			err = NewDealSignerService(h1, authToken, wallet)
 			require.NoError(t, err)
 
 			// Client (dealerd) libp2p2 host.
-			h2, err := bhost.NewHost(ctx, swarmt.GenSwarm(t, ctx), nil)
+			h2 := bhost.New(swarmt.GenSwarm(t, ctx))
+			err := h2.Connect(ctx, peer.AddrInfo{ID: h1.ID(), Addrs: h1.Addrs()})
 			require.NoError(t, err)
 
 			sig, err := RequestSignatureV1(ctx, h2, test.authToken, test.proposal, h1.ID())
@@ -102,9 +103,12 @@ func TestProposalSigning(t *testing.T) {
 }
 
 func requireValidSignature(t *testing.T, proposal market.DealProposal, sig *crypto.Signature) {
-	msg, err := cborutil.Dump(proposal)
+	msg := &bytes.Buffer{}
+	err := proposal.MarshalCBOR(msg)
 	require.NoError(t, err)
-	ok, err := libwal.WalletVerify(proposal.Client, msg, sig.Data)
+	sigBytes, err := sig.MarshalBinary()
+	require.NoError(t, err)
+	ok, err := libwal.WalletVerify(proposal.Client, msg.Bytes(), sigBytes)
 	require.NoError(t, err)
 	require.True(t, ok)
 }

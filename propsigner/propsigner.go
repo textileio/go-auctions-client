@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io"
 	"time"
 
 	"github.com/filecoin-project/go-state-types/crypto"
@@ -58,18 +57,11 @@ func NewDealSignerService(h host.Host, authToken string, wallet Wallet) error {
 }
 
 func (dss *dealSignerService) streamHandler(s network.Stream) {
-	defer s.Reset()
+	defer s.Close()
 	s.SetDeadline(time.Now().Add(streamDeadline))
 
-	r := io.LimitReader(s, maxRequestMessageSize)
-	buf, err := io.ReadAll(r)
-	if err != nil {
-		replyWithError(s, "reading proposal signing request: %s", err)
-		return
-	}
-
 	var req pb.ProposalSigningRequest
-	if err := proto.Unmarshal(buf, &req); err != nil {
+	if err := readMsg(s, maxRequestMessageSize, &req); err != nil {
 		replyWithError(s, "unmarshaling proposal signing request: %s", err)
 		return
 	}
@@ -109,12 +101,7 @@ func (dss *dealSignerService) streamHandler(s network.Stream) {
 	res := pb.ProposalSigningResponse{
 		Signature: sigBytes,
 	}
-	buf, err = proto.Marshal(&res)
-	if err != nil {
-		replyWithError(s, "marshaling error response: %s", err)
-		return
-	}
-	if _, err := s.Write(buf); err != nil {
+	if err := writeMsg(s, &res); err != nil {
 		log.Errorf("writing error response to stream: %s", err)
 		return
 	}
