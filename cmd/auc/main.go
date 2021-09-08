@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/textileio/go-auctions-client/common"
+	"github.com/textileio/cli"
 	logger "github.com/textileio/go-log/v2"
 )
 
@@ -36,13 +36,13 @@ func init() {
 
 	// Commands.
 	rootCmd.AddCommand(walletCmd)
-	common.ConfigureCLI(v, envPrefix, []common.Flag{
+	cli.ConfigureCLI(v, envPrefix, []cli.Flag{
 		{Name: "log-debug", DefValue: false, Description: "Enable debug level log"},
 		{Name: "log-json", DefValue: false, Description: "Enable structured logging"},
 	}, rootCmd.PersistentFlags())
 
 	walletCmd.AddCommand(walletDaemonCmd)
-	common.ConfigureCLI(v, envPrefix, []common.Flag{
+	cli.ConfigureCLI(v, envPrefix, []cli.Flag{
 		{Name: "wallet-keys", DefValue: []string{}, Description: "Wallet address keys"},
 		{Name: "auth-token", DefValue: "", Description: "Authorization token to validate signing requests"},
 	}, walletDaemonCmd.Flags())
@@ -57,6 +57,6 @@ var rootCmd = &cobra.Command{
 }
 
 func main() {
-	common.CheckErr(rootCmd.Execute())
+	cli.CheckErr(rootCmd.Execute())
 
 }
