@@ -2,6 +2,7 @@ package propsigner
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"time"
@@ -16,8 +17,8 @@ import (
 )
 
 const (
-	v1Protocol             = "/auctions/proposal-signer/1.0.0"
-	maxProposalMessageSize = 100 << 10 // 100KiB
+	v1Protocol            = "/auctions/proposal-signer/1.0.0"
+	maxRequestMessageSize = 100 << 10 // 100KiB
 
 	// filecoinDealProtocolV1 refers exactly to the libp2p protocol used to send deal proposals.
 	// This value is used to know how to unmarshal proposal payloads. Future deal proposal versions
@@ -28,6 +29,9 @@ const (
 var (
 	log            = logger.Logger("propsigner")
 	streamDeadline = time.Minute
+
+	errInvalidAuthToken  = errors.New("invalid auth token")
+	errWalletMissingKeys = errors.New("wallet doesn't have keys for address")
 )
 
 type Wallet interface {
@@ -57,7 +61,7 @@ func (dss *dealSignerService) streamHandler(s network.Stream) {
 	defer s.Reset()
 	s.SetDeadline(time.Now().Add(streamDeadline))
 
-	r := io.LimitReader(s, maxProposalMessageSize)
+	r := io.LimitReader(s, maxRequestMessageSize)
 	buf, err := io.ReadAll(r)
 	if err != nil {
 		replyWithError(s, "reading proposal signing request: %s", err)
@@ -70,7 +74,7 @@ func (dss *dealSignerService) streamHandler(s network.Stream) {
 		return
 	}
 	if req.AuthToken != dss.authToken {
-		replyWithError(s, "invalid auth token")
+		replyWithError(s, errInvalidAuthToken.Error())
 		return
 	}
 
@@ -122,7 +126,7 @@ func (dss *dealSignerService) validateDealProposalV1(proposal market.DealProposa
 		return fmt.Errorf("checking wallet keys: %s", err)
 	}
 	if !ok {
-		return fmt.Errorf("wallet doesn't have keys for %s", proposal.Client)
+		return errWalletMissingKeys
 	}
 
 	return nil

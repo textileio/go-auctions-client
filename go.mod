@@ -3,11 +3,15 @@ module github.com/textileio/go-auctions-client
 go 1.17
 
 require (
+	github.com/filecoin-project/go-address v0.0.5
+	github.com/filecoin-project/go-cbor-util v0.0.0-20191219014500-08c40a1e63a2
 	github.com/filecoin-project/go-state-types v0.1.1-0.20210506134452-99b279731c48
 	github.com/filecoin-project/specs-actors v0.9.14
+	github.com/ipfs/go-cid v0.0.7
 	github.com/jsign/go-filsigner v0.3.1
 	github.com/libp2p/go-libp2p v0.14.4
 	github.com/libp2p/go-libp2p-core v0.8.6
+	github.com/libp2p/go-libp2p-peer v0.2.0
 	github.com/libp2p/go-libp2p-swarm v0.5.0
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/viper v1.8.1
@@ -35,11 +39,9 @@ require (
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.0-20210507181900-4e0be8d2fbb4 // indirect
 	github.com/drand/kyber v1.1.4 // indirect
 	github.com/drand/kyber-bls12381 v0.2.1 // indirect
-	github.com/filecoin-project/go-address v0.0.5 // indirect
 	github.com/filecoin-project/go-amt-ipld/v2 v2.1.1-0.20201006184820-924ee87a1349 // indirect
 	github.com/filecoin-project/go-amt-ipld/v3 v3.0.0 // indirect
 	github.com/filecoin-project/go-bitfield v0.2.4 // indirect
-	github.com/filecoin-project/go-cbor-util v0.0.0-20191219014500-08c40a1e63a2 // indirect
 	github.com/filecoin-project/go-data-transfer v1.2.7 // indirect
 	github.com/filecoin-project/go-fil-markets v1.1.9 // indirect
 	github.com/filecoin-project/go-hamt-ipld v0.1.5 // indirect
@@ -74,7 +76,6 @@ require (
 	github.com/ipfs/bbloom v0.0.4 // indirect
 	github.com/ipfs/go-block-format v0.0.3 // indirect
 	github.com/ipfs/go-blockservice v0.1.4 // indirect
-	github.com/ipfs/go-cid v0.0.7 // indirect
 	github.com/ipfs/go-datastore v0.4.5 // indirect
 	github.com/ipfs/go-filestore v1.0.0 // indirect
 	github.com/ipfs/go-graphsync v0.6.0 // indirect
@@ -114,6 +115,7 @@ require (
 	github.com/libp2p/go-libp2p-autonat v0.4.2 // indirect
 	github.com/libp2p/go-libp2p-blankhost v0.2.0 // indirect
 	github.com/libp2p/go-libp2p-circuit v0.4.0 // indirect
+	github.com/libp2p/go-libp2p-crypto v0.1.0 // indirect
 	github.com/libp2p/go-libp2p-discovery v0.5.0 // indirect
 	github.com/libp2p/go-libp2p-mplex v0.4.1 // indirect
 	github.com/libp2p/go-libp2p-nat v0.0.6 // indirect
