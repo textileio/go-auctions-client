@@ -31,7 +31,7 @@ var walletDaemonCmd = &cobra.Command{
 	Run: func(c *cobra.Command, args []string) {
 		log.Infof("auc %s", buildinfo.Summary())
 
-		settings, err := cli.MarshalConfig(v, !v.GetBool("log-json"), "wallet-keys")
+		settings, err := cli.MarshalConfig(v, !v.GetBool("log-json"), "wallet-keys", "auth-token")
 		cli.CheckErrf("marshaling config: %v", err)
 		log.Infof("loaded config from %s: %s", v.ConfigFileUsed(), string(settings))
 
@@ -39,6 +39,10 @@ var walletDaemonCmd = &cobra.Command{
 		walletKeys := v.GetStringSlice("wallet-keys")
 		wallet, err := localwallet.New(walletKeys)
 		cli.CheckErrf("creating local wallet: %s", err)
+		addrs := wallet.GetAddresses()
+		for _, addr := range addrs {
+			log.Infof("Loaded wallet: %s", addr)
+		}
 
 		h, err := libp2p.New(c.Context())
 		cli.CheckErrf("creating libp2p host: %s", err)

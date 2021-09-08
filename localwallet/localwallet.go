@@ -17,6 +17,9 @@ type Wallet struct {
 }
 
 func New(pks []string) (*Wallet, error) {
+	if len(pks) == 0 {
+		return nil, fmt.Errorf("at least one private key should be provided")
+	}
 	keys := map[string]string{}
 	for i := range pks {
 		pubKey, err := wallet.PublicKey(pks[i])
@@ -47,4 +50,12 @@ func (w *Wallet) Sign(addr string, payload []byte) (*crypto.Signature, error) {
 	}
 
 	return sig, nil
+}
+
+func (w *Wallet) GetAddresses() []string {
+	res := make([]string, 0, len(w.keys))
+	for addr := range w.keys {
+		res = append(res, addr)
+	}
+	return res
 }
