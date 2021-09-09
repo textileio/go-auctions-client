@@ -1,7 +1,10 @@
 package main
 
 import (
+	"time"
+
 	"github.com/libp2p/go-libp2p"
+	connmgr "github.com/libp2p/go-libp2p-connmgr"
 	"github.com/spf13/cobra"
 	"github.com/textileio/cli"
 	"github.com/textileio/go-auctions-client/buildinfo"
@@ -24,9 +27,7 @@ var walletDaemonCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(0),
 	PersistentPreRun: func(c *cobra.Command, args []string) {
 		cli.ExpandEnvVars(v, v.AllSettings())
-		err := cli.ConfigureLogging(v, []string{
-			cliName,
-		})
+		err := cli.ConfigureLogging(v, nil)
 		cli.CheckErrf("setting log levels: %v", err)
 	},
 	Run: func(c *cobra.Command, args []string) {
@@ -45,11 +46,11 @@ var walletDaemonCmd = &cobra.Command{
 			log.Infof("Loaded wallet: %s", addr)
 		}
 
-		h, err := libp2p.New(c.Context())
+		h, err := libp2p.New(c.Context(), libp2p.ConnectionManager(connmgr.NewConnManager(500, 800, time.Minute)))
 		cli.CheckErrf("creating libp2p host: %s", err)
 		log.Infof("Remote Wallet PeerID: %s", h.ID())
 
-		rlymgr, err := relaymgr.New(c.Context(), h, v.GetString("relay-addr"))
+		rlymgr, err := relaymgr.New(c.Context(), h, v.GetString("relay-maddr"))
 		cli.CheckErrf("connecting with relay: %s", err)
 
 		err = propsigner.NewDealSignerService(h, authToken, wallet)

@@ -20,7 +20,7 @@ const (
 var (
 	log = logger.Logger("relaymgr")
 
-	pollFrequency = time.Second * 30
+	pollFrequency = time.Second * 10
 )
 
 // RelayManager connects a libp2p host to an external relay and do a best-effort
@@ -51,20 +51,19 @@ func New(ctx context.Context, h host.Host, relayMultiaddress string) (*RelayMana
 
 	closeCtx, closeSignal := context.WithCancel(context.Background())
 	rm := &RelayManager{
-		host:        h,
-		relayAddr:   *addrInfo,
-		connNotifee: &connNotifee{peerID: addrInfo.ID},
+		host:      h,
+		relayAddr: *addrInfo,
 
 		closeCtx:    closeCtx,
 		closeSignal: closeSignal,
 		closed:      make(chan struct{}),
 	}
+	rm.connNotifee = &connNotifee{rm: rm}
+	h.Network().Notify(rm.connNotifee)
 
-	err = h.Connect(ctx, *addrInfo)
-	if err != nil {
+	if err := rm.connect(); err != nil {
 		return nil, fmt.Errorf("connecting to relay: %s", err)
 	}
-	h.ConnManager().Protect(addrInfo.ID, connProtectTag)
 
 	go rm.keepHealthy()
 
@@ -76,6 +75,7 @@ func (rm *RelayManager) Close() error {
 		log.Infof("closing relay manager")
 
 		rm.host.ConnManager().Unprotect(rm.relayAddr.ID, connProtectTag)
+		rm.host.Network().StopNotify(rm.connNotifee)
 		rm.closeSignal()
 		<-rm.closed
 		log.Infof("relay manager closed")
@@ -91,22 +91,48 @@ func (rm *RelayManager) keepHealthy() {
 			log.Debugf("closing healthy checker")
 			return
 		case <-time.After(pollFrequency):
+			isProtected := rm.host.ConnManager().IsProtected(rm.relayAddr.ID, "")
+			connStatus := rm.host.Network().Connectedness(rm.relayAddr.ID)
+
+			if !isProtected || connStatus != network.Connected {
+				log.Warnf("detected unhealthy status of connection (protected: %t, connStatus: %s)", isProtected, connStatus)
+				if err := rm.connect(); err != nil {
+					log.Errorf("poller reconnect: %s", err)
+					continue
+				}
+			}
+			log.Debugf("relay connection is healthy")
 		}
 	}
 }
 
+func (rm *RelayManager) connect() error {
+	log.Infof("connecting with relay...")
+	err := rm.host.Connect(rm.closeCtx, rm.relayAddr)
+	if err != nil {
+		return fmt.Errorf("connecting to relay: %s", err)
+	}
+	rm.host.ConnManager().Protect(rm.relayAddr.ID, connProtectTag)
+	log.Infof("connected with relay")
+
+	return nil
+}
+
 type connNotifee struct {
-	peerID peer.ID
+	rm *RelayManager
 }
 
 func (n *connNotifee) Connected(_ network.Network, ne network.Conn) {
-	if ne.RemotePeer() == n.peerID {
+	if ne.RemotePeer() == n.rm.relayAddr.ID {
 		log.Debugf("connected with remote relay")
 	}
 }
 func (n *connNotifee) Disconnected(_ network.Network, ne network.Conn) {
-	if ne.RemotePeer() == n.peerID {
-		log.Debugf("disconnected from remote relay")
+	if ne.RemotePeer() == n.rm.relayAddr.ID {
+		log.Warnf("disconnected from remote relay")
+		if err := n.rm.connect(); err != nil {
+			log.Errorf("notifee reconnect: %s", err)
+		}
 	}
 }
 func (n *connNotifee) OpenedStream(_ network.Network, s network.Stream)     {}

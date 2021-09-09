@@ -37,7 +37,7 @@ func init() {
 	// Commands.
 	rootCmd.AddCommand(walletCmd)
 	cli.ConfigureCLI(v, envPrefix, []cli.Flag{
-		{Name: "log-debug", DefValue: false, Description: "Enable debug level log"},
+		{Name: "log-debug", DefValue: true, Description: "Enable debug level log"},
 		{Name: "log-json", DefValue: false, Description: "Enable structured logging"},
 	}, rootCmd.PersistentFlags())
 

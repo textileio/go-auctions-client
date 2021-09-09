@@ -9,6 +9,7 @@ require (
 	github.com/ipfs/go-cid v0.0.7
 	github.com/jsign/go-filsigner v0.3.1
 	github.com/libp2p/go-libp2p v0.14.4
+	github.com/libp2p/go-libp2p-connmgr v0.2.4
 	github.com/libp2p/go-libp2p-core v0.8.5
 	github.com/libp2p/go-libp2p-swarm v0.5.0
 	github.com/multiformats/go-multiaddr v0.3.3
@@ -26,6 +27,7 @@ require (
 	github.com/GeertJohan/go.rice v1.0.0 // indirect
 	github.com/StackExchange/wmi v0.0.0-20190523213315-cbe66965904d // indirect
 	github.com/akavel/rsrc v0.8.0 // indirect
+	github.com/benbjohnson/clock v1.1.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/btcsuite/btcd v0.21.0-beta // indirect
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect
@@ -118,8 +120,6 @@ require (
 	github.com/libp2p/go-libp2p-blankhost v0.2.0 // indirect
 	github.com/libp2p/go-libp2p-circuit v0.4.0 // indirect
 	github.com/libp2p/go-libp2p-discovery v0.5.0 // indirect
-	github.com/libp2p/go-libp2p-host v0.0.3 // indirect
-	github.com/libp2p/go-libp2p-interface-connmgr v0.0.5 // indirect
 	github.com/libp2p/go-libp2p-mplex v0.4.1 // indirect
 	github.com/libp2p/go-libp2p-nat v0.0.6 // indirect
 	github.com/libp2p/go-libp2p-noise v0.2.0 // indirect

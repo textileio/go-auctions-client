@@ -58,6 +58,7 @@ func NewDealSignerService(h host.Host, authToken string, wallet Wallet) error {
 }
 
 func (dss *dealSignerService) streamHandler(s network.Stream) {
+	log.Infof("executing stream handler")
 	defer func() {
 		if err := s.Close(); err != nil {
 			log.Errorf("closing deal proposal signer stream: %s", err)
@@ -112,6 +113,7 @@ func (dss *dealSignerService) streamHandler(s network.Stream) {
 		log.Errorf("writing error response to stream: %s", err)
 		return
 	}
+	log.Infof("stream handler executed successfully")
 }
 
 func (dss *dealSignerService) validateDealProposalV1(proposal market.DealProposal) error {
