@@ -7,6 +7,7 @@ import (
 	"github.com/textileio/go-auctions-client/buildinfo"
 	"github.com/textileio/go-auctions-client/localwallet"
 	"github.com/textileio/go-auctions-client/propsigner"
+	"github.com/textileio/go-auctions-client/relaymgr"
 )
 
 var walletCmd = &cobra.Command{
@@ -46,13 +47,21 @@ var walletDaemonCmd = &cobra.Command{
 
 		h, err := libp2p.New(c.Context())
 		cli.CheckErrf("creating libp2p host: %s", err)
+		log.Infof("Remote Wallet PeerID: %s", h.ID())
+
+		rlymgr, err := relaymgr.New(c.Context(), h, v.GetString("relay-addr"))
+		cli.CheckErrf("connecting with relay: %s", err)
 
 		err = propsigner.NewDealSignerService(h, authToken, wallet)
 		cli.CheckErrf("creating deal signer service: %s", err)
 
 		cli.HandleInterrupt(func() {
-			err := h.Close()
-			cli.CheckErrf("closing libp2p host: %s", err)
+			if err := rlymgr.Close(); err != nil {
+				log.Errorf("closing relay manager: %s", err)
+			}
+			if err := h.Close(); err != nil {
+				log.Errorf("closing libp2p host: %s", err)
+			}
 		})
 	},
 }

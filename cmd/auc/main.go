@@ -45,6 +45,7 @@ func init() {
 	cli.ConfigureCLI(v, envPrefix, []cli.Flag{
 		{Name: "wallet-keys", DefValue: []string{}, Description: "Wallet address keys"},
 		{Name: "auth-token", DefValue: "", Description: "Authorization token to validate signing requests"},
+		{Name: "relay-maddr", DefValue: "", Description: "Multiaddress of libp2p relay"},
 	}, walletDaemonCmd.Flags())
 }
 
