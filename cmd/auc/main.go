@@ -30,7 +30,7 @@ func init() {
 		v.SetConfigType("json")
 		v.SetConfigName("config")
 		v.AddConfigPath(os.Getenv(envPrefix + "_PATH"))
-		v.AddConfigPath(defaultConfigPath)
+		v.AddConfigPath(configPath)
 		_ = v.ReadInConfig()
 	})
 
@@ -46,7 +46,6 @@ func init() {
 		{Name: "wallet-keys", DefValue: []string{}, Description: "Wallet address keys"},
 		{Name: "auth-token", DefValue: "", Description: "Authorization token to validate signing requests"},
 	}, walletDaemonCmd.Flags())
-
 }
 
 var rootCmd = &cobra.Command{
@@ -58,5 +57,4 @@ var rootCmd = &cobra.Command{
 
 func main() {
 	cli.CheckErr(rootCmd.Execute())
-
 }

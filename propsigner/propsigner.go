@@ -32,6 +32,7 @@ var (
 	errWalletMissingKeys = errors.New("wallet doesn't have keys for address")
 )
 
+// Wallet contains private keys for Filecoin addresses.
 type Wallet interface {
 	Has(addr string) (bool, error)
 	Sign(addr string, payload []byte) (*crypto.Signature, error)
@@ -42,6 +43,7 @@ type dealSignerService struct {
 	wallet    Wallet
 }
 
+// NewDealSignerService configures a stream handler for the proposal signer protocol.
 func NewDealSignerService(h host.Host, authToken string, wallet Wallet) error {
 	if authToken == "" {
 		return fmt.Errorf("authorization token is empty")
@@ -56,8 +58,14 @@ func NewDealSignerService(h host.Host, authToken string, wallet Wallet) error {
 }
 
 func (dss *dealSignerService) streamHandler(s network.Stream) {
-	defer s.Close()
-	s.SetDeadline(time.Now().Add(streamDeadline))
+	defer func() {
+		if err := s.Close(); err != nil {
+			log.Errorf("closing deal proposal signer stream: %s", err)
+		}
+	}()
+	if err := s.SetDeadline(time.Now().Add(streamDeadline)); err != nil {
+		log.Errorf("set deadline in stream: %s", err)
+	}
 
 	var req pb.ProposalSigningRequest
 	if err := readMsg(s, maxRequestMessageSize, &req); err != nil {

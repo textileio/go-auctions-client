@@ -21,16 +21,15 @@ import (
 var (
 	walletKeys = []string{
 		// Secp256k1 exported private key in Lotus format.
-		"7b2254797065223a22736563703235366b31222c22507269766174654b6579223a226b35507976337148327349586343595a58594f5775453149326e32554539436861556b6c4e36695a5763453d227d",
+		"7b2254797065223a22736563703235366b31222c22507269766174654b6579223a226b35507976337148327349586343595a58594f5775453149326e32554539436861556b6c4e36695a5763453d227d", // nolint:lll
 		// BLS exported private key in Lotus format.
-		"7b2254797065223a22626c73222c22507269766174654b6579223a226862702f794666527439514c43716b6d566171415752436f50556777314b776971716e73684e49704e57513d227d",
+		"7b2254797065223a22626c73222c22507269766174654b6579223a226862702f794666527439514c43716b6d566171415752436f50556777314b776971716e73684e49704e57513d227d", // nolint:lll
 	}
 )
 
 type testCase struct {
 	name      string
 	proposal  market.DealProposal
-	wallet    *localwallet.Wallet
 	authToken string
 	err       error
 }
@@ -46,28 +45,24 @@ func TestProposalSigning(t *testing.T) {
 		{
 			name:      "success secp256k1",
 			proposal:  correctProposalSecp256k1(t),
-			wallet:    wallet,
 			authToken: authToken,
 			err:       nil,
 		},
 		{
 			name:      "success bls",
 			proposal:  correctProposalBLS(t),
-			wallet:    wallet,
 			authToken: authToken,
 			err:       nil,
 		},
 		{
 			name:      "invalid auth token",
 			proposal:  correctProposalSecp256k1(t),
-			wallet:    wallet,
 			authToken: "wrongToken",
 			err:       errInvalidAuthToken,
 		},
 		{
 			name:      "invalid auth token",
 			proposal:  proposalWithUnknownAddress(t),
-			wallet:    wallet,
 			authToken: authToken,
 			err:       errWalletMissingKeys,
 		},
@@ -146,7 +141,8 @@ func correctProposalBLS(t *testing.T) market.DealProposal {
 }
 
 func proposalWithUnknownAddress(t *testing.T) market.DealProposal {
-	unknownSecp256k1Addr, err := address.NewFromString("f3wmv7nhiqosmlr6mis2mr4xzupdhe3rtvw5ntis4x6yru7jhm35pfla2pkwgwfa3t62kdmoylssczmf74yika")
+	fakeSecp256k1Addr := "f3wmv7nhiqosmlr6mis2mr4xzupdhe3rtvw5ntis4x6yru7jhm35pfla2pkwgwfa3t62kdmoylssczmf74yika"
+	unknownSecp256k1Addr, err := address.NewFromString(fakeSecp256k1Addr)
 	require.NoError(t, err)
 
 	proposal := correctProposalSecp256k1(t)

@@ -8,7 +8,7 @@ import (
 	"github.com/filecoin-project/go-state-types/crypto"
 	"github.com/filecoin-project/specs-actors/actors/builtin/market"
 	"github.com/libp2p/go-libp2p-core/host"
-	peer "github.com/libp2p/go-libp2p-peer"
+	"github.com/libp2p/go-libp2p-core/peer"
 	pb "github.com/textileio/go-auctions-client/gen/wallet"
 )
 
@@ -16,6 +16,7 @@ const (
 	maxResponseMessageSize = 100 << 10
 )
 
+// RequestSignatureV1 request a signature for a deal proposal to a remote wallet.
 func RequestSignatureV1(
 	ctx context.Context,
 	h host.Host,
@@ -37,7 +38,11 @@ func RequestSignatureV1(
 	if err != nil {
 		return nil, fmt.Errorf("creating libp2p stream: %s", err)
 	}
-	defer s.Close()
+	defer func() {
+		if err := s.Close(); err != nil {
+			log.Errorf("closing deal proposal signer stream: %s", err)
+		}
+	}()
 
 	if err := writeMsg(s, &req); err != nil {
 		return nil, fmt.Errorf("sending deal signing request to stream: %s", err)
