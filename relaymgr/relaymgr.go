@@ -122,11 +122,6 @@ type connNotifee struct {
 	rm *RelayManager
 }
 
-func (n *connNotifee) Connected(_ network.Network, ne network.Conn) {
-	if ne.RemotePeer() == n.rm.relayAddr.ID {
-		log.Debugf("connected with remote relay")
-	}
-}
 func (n *connNotifee) Disconnected(_ network.Network, ne network.Conn) {
 	if ne.RemotePeer() == n.rm.relayAddr.ID {
 		log.Warnf("disconnected from remote relay")
@@ -135,6 +130,7 @@ func (n *connNotifee) Disconnected(_ network.Network, ne network.Conn) {
 		}
 	}
 }
+func (n *connNotifee) Connected(_ network.Network, ne network.Conn)         {}
 func (n *connNotifee) OpenedStream(_ network.Network, s network.Stream)     {}
 func (n *connNotifee) ClosedStream(_ network.Network, s network.Stream)     {}
 func (n *connNotifee) ListenClose(_ network.Network, _ multiaddr.Multiaddr) {}

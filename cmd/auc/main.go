@@ -37,7 +37,7 @@ func init() {
 	// Commands.
 	rootCmd.AddCommand(walletCmd)
 	cli.ConfigureCLI(v, envPrefix, []cli.Flag{
-		{Name: "log-debug", DefValue: true, Description: "Enable debug level log"},
+		{Name: "log-debug", DefValue: false, Description: "Enable debug level log"},
 		{Name: "log-json", DefValue: false, Description: "Enable structured logging"},
 	}, rootCmd.PersistentFlags())
 
@@ -46,6 +46,7 @@ func init() {
 		{Name: "wallet-keys", DefValue: []string{}, Description: "Wallet address keys"},
 		{Name: "auth-token", DefValue: "", Description: "Authorization token to validate signing requests"},
 		{Name: "relay-maddr", DefValue: "", Description: "Multiaddress of libp2p relay"},
+		{Name: "listen-maddr", DefValue: "", Description: "Libp2p listen multiaddr"},
 	}, walletDaemonCmd.Flags())
 }
 

@@ -5,6 +5,8 @@ import (
 
 	"github.com/libp2p/go-libp2p"
 	connmgr "github.com/libp2p/go-libp2p-connmgr"
+	"github.com/libp2p/go-libp2p-core/host"
+	"github.com/multiformats/go-multiaddr"
 	"github.com/spf13/cobra"
 	"github.com/textileio/cli"
 	"github.com/textileio/go-auctions-client/buildinfo"
@@ -46,23 +48,49 @@ var walletDaemonCmd = &cobra.Command{
 			log.Infof("Loaded wallet: %s", addr)
 		}
 
-		h, err := libp2p.New(c.Context(), libp2p.ConnectionManager(connmgr.NewConnManager(500, 800, time.Minute)))
-		cli.CheckErrf("creating libp2p host: %s", err)
-		log.Infof("Remote Wallet PeerID: %s", h.ID())
+		opts := []libp2p.Option{
+			libp2p.ConnectionManager(connmgr.NewConnManager(10, 20, time.Minute)),
+		}
+		if v.GetString("listen-maddr") != "" {
+			listenMaddr, err := multiaddr.NewMultiaddr(v.GetString("listen-maddr"))
+			cli.CheckErrf("parsing listen multiaddr: %s", err)
+			opts = append(opts, libp2p.ListenAddrs(listenMaddr))
+		}
 
-		rlymgr, err := relaymgr.New(c.Context(), h, v.GetString("relay-maddr"))
-		cli.CheckErrf("connecting with relay: %s", err)
+		h, err := libp2p.New(c.Context(), opts...)
+		cli.CheckErrf("creating libp2p host: %s", err)
+		printHostInfo(h)
+
+		var rlymgr *relaymgr.RelayManager
+		if v.GetString("relay-maddr") != "" {
+			rlymgr, err = relaymgr.New(c.Context(), h, v.GetString("relay-maddr"))
+			cli.CheckErrf("connecting with relay: %s", err)
+
+			maddrcircuit := v.GetString("relay-maddr") + "/p2p-circuit/" + h.ID().String()
+			log.Infof("Relayed multiaddr: %s", maddrcircuit)
+		} else {
+			log.Warnf("libp2p relaying is disabled")
+		}
 
 		err = propsigner.NewDealSignerService(h, authToken, wallet)
 		cli.CheckErrf("creating deal signer service: %s", err)
 
 		cli.HandleInterrupt(func() {
-			if err := rlymgr.Close(); err != nil {
-				log.Errorf("closing relay manager: %s", err)
+			if rlymgr != nil {
+				if err := rlymgr.Close(); err != nil {
+					log.Errorf("closing relay manager: %s", err)
+				}
 			}
 			if err := h.Close(); err != nil {
 				log.Errorf("closing libp2p host: %s", err)
 			}
 		})
 	},
+}
+
+func printHostInfo(h host.Host) {
+	log.Infof("libp2p peer-id: %s", h.ID())
+	for _, maddr := range h.Addrs() {
+		log.Infof("Listen multiaddr: %s", maddr)
+	}
 }
