@@ -70,6 +70,7 @@ func New(ctx context.Context, h host.Host, relayMultiaddress string) (*RelayMana
 	return rm, nil
 }
 
+// Close stops relay manager work to keep a healthy connection with the relay.
 func (rm *RelayManager) Close() error {
 	rm.closeOnce.Do(func() {
 		log.Infof("closing relay manager")
