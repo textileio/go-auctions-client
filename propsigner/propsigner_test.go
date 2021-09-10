@@ -77,12 +77,12 @@ func TestProposalSigning(t *testing.T) {
 
 			// Remote wallet libp2p host.
 			h1 := bhost.New(swarmt.GenSwarm(t, ctx))
-			err = NewDealSignerService(h1, authToken, wallet)
+			err := NewDealSignerService(h1, authToken, wallet)
 			require.NoError(t, err)
 
 			// Client (dealerd) libp2p2 host.
 			h2 := bhost.New(swarmt.GenSwarm(t, ctx))
-			err := h2.Connect(ctx, peer.AddrInfo{ID: h1.ID(), Addrs: h1.Addrs()})
+			err = h2.Connect(ctx, peer.AddrInfo{ID: h1.ID(), Addrs: h1.Addrs()})
 			require.NoError(t, err)
 
 			sig, err := RequestSignatureV1(ctx, h2, test.authToken, test.proposal, h1.ID())

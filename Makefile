@@ -12,7 +12,6 @@ BIN_BUILD_FLAGS?=CGO_ENABLED=0
 BIN_VERSION?="git"
 GOVVV_FLAGS=$(shell $(GOVVV) -flags -version $(BIN_VERSION) -pkg $(shell go list ./buildinfo))
 
-
 lint: 
 	$(GOLANGCI_LINT) run
 .PHONYY: lint
