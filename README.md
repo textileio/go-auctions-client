@@ -99,7 +99,7 @@ for the _direct auctions_ API calls.
 
 This repository can also be used as a library, which allows the following use-cases:
 - Incorporate a remote wallet in your existing applications.
-- Provide your implementation of the [wallet abstraction](https://github.com/textileio/go-auctions-client/blob/jsign/initial/propsigner/propsigner.go#L36). This can be useful if you want fewer security assumptions, or have the wallet keys in a more constrained environment. The daemon will still be handling the protocol layer of remote signing and deferring signing to your implementation.
+- Provide your implementation of the [wallet abstraction](https://github.com/textileio/go-auctions-client/blob/main/propsigner/propsigner.go#L36). This can be useful if you want fewer security assumptions, or have the wallet keys in a more constrained environment. The daemon will still be handling the protocol layer of remote signing and deferring signing to your implementation.
 
 
 ## Contributing
