@@ -24,11 +24,11 @@ func readMsg(r io.Reader, maxSize int, msg proto.Message) error {
 		return err
 	}
 
-	buf := make([]byte, maxSize)
-	if uint64(len(buf)) < mlen {
+	if uint64(maxSize) < mlen {
 		return errors.New("message too large")
 	}
 
+	buf := make([]byte, maxSize)
 	buf = buf[:mlen]
 	_, err = io.ReadFull(r, buf)
 	if err != nil {
