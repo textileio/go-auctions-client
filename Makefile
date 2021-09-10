@@ -26,8 +26,8 @@ install:
 	$(BIN_BUILD_FLAGS) go install -ldflags="${GOVVV_FLAGS}" ./cmd/auc
 .PHONY: install
 
-protos: $(PROTOC_GEN_GO) $(PROTOC_GEN_GO_GRPC) clean-protos
-	$(BUF) generate --template '{"version":"v1beta1","plugins":[{"name":"go","out":"gen","opt":"paths=source_relative","path":$(PROTOC_GEN_GO)},{"name":"go-grpc","out":"gen","opt":"paths=source_relative","path":$(PROTOC_GEN_GO_GRPC)}]}'
+protos: $(PROTOC_GEN_GO) clean-protos
+	$(BUF) generate --template '{"version":"v1beta1","plugins":[{"name":"go","out":"gen","opt":"paths=source_relative","path":$(PROTOC_GEN_GO)}]}'
 .PHONY: protos
 
 clean-protos:
