@@ -5,8 +5,10 @@ import (
 
 	"github.com/libp2p/go-libp2p"
 	connmgr "github.com/libp2p/go-libp2p-connmgr"
+	"github.com/libp2p/go-libp2p-core/crypto"
 	"github.com/libp2p/go-libp2p-core/host"
 	"github.com/multiformats/go-multiaddr"
+	"github.com/multiformats/go-multibase"
 	"github.com/spf13/cobra"
 	"github.com/textileio/cli"
 	"github.com/textileio/go-auctions-client/buildinfo"
@@ -35,7 +37,7 @@ var walletDaemonCmd = &cobra.Command{
 	Run: func(c *cobra.Command, args []string) {
 		log.Infof("auc %s", buildinfo.Summary())
 
-		settings, err := cli.MarshalConfig(v, !v.GetBool("log-json"), "wallet-keys", "auth-token")
+		settings, err := cli.MarshalConfig(v, !v.GetBool("log-json"), "wallet-keys", "auth-token", "private-key")
 		cli.CheckErrf("marshaling config: %v", err)
 		log.Infof("loaded config from %s: %s", v.ConfigFileUsed(), string(settings))
 
@@ -48,8 +50,13 @@ var walletDaemonCmd = &cobra.Command{
 			log.Infof("Loaded wallet: %s", addr)
 		}
 
+		_, key, err := multibase.Decode(v.GetString("private-key"))
+		cli.CheckErrf("decoding private key: %v", err)
+		sk, err := crypto.UnmarshalPrivateKey(key)
+		cli.CheckErrf("unmarshaling private key: %v", err)
 		opts := []libp2p.Option{
 			libp2p.ConnectionManager(connmgr.NewConnManager(10, 20, time.Minute)),
+			libp2p.Identity(sk),
 		}
 		if v.GetString("listen-maddr") != "" {
 			listenMaddr, err := multiaddr.NewMultiaddr(v.GetString("listen-maddr"))
