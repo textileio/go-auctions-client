@@ -99,7 +99,7 @@ The relay multiaddress circuit is useful to augment your reachable multiaddresse
 for the _direct auctions_ API calls.
 
 An example of the body for a direct-auction API call:
-```json
+```
 {
    "payloadCid":"...",
    "pieceCid":"...",
