@@ -53,7 +53,8 @@ Usage:
 Flags:
       --auth-token string     Authorization token to validate signing requests
   -h, --help                  help for daemon
-      --relay-maddr string    Multiaddress of libp2p relay
+      --private-key string    Libp2p private key
+      --relay-maddr string    Multiaddress of libp2p relay (default "/ip4/34.105.85.147/tcp/4001/p2p/QmYRDEq8z3Y9hBBAirwMFySuxyCoWwskrD1bxUEYKBiwmU")
       --wallet-keys strings   Wallet address keys; repeatable
 
 Global Flags:
@@ -91,9 +92,33 @@ The first log lines of the daemon will help understanding which wallet public ke
 2021-09-10T10:07:10.955-0300    INFO    auc     auc/walletCmd.go:70     Relayed multiaddr: /ip4/140.20.1.1/tcp/9898/p2p/QmfPveoYMS158VbkxNeizZ3ZrDWHb82R28xfkVT9QodcQA/p2p-circuit/Qma7rzaZUYNgqSkhgrQ8dmBhPvBhuGk3W7gm1MnoK2Bj9U
 2021-09-10T10:07:30.956-0300    DEBUG   relaymgr        relaymgr/relaymgr.go:104        relay connection is healthy
 ```
-
 The relay multiaddress circuit is useful to augment your reachable multiaddresses of the remote wallet 
+
+
+### Remote signing direct-auction API
 for the _direct auctions_ API calls.
+
+An example of the body for a direct-auction API call:
+```json
+{
+   "payloadCid":"...",
+   "pieceCid":"...",
+   "pieceSize":...,
+   "repFactor":...,
+   "deadline":"...",
+   "carURL":{...},
+   "remoteWallet":{
+      # These three fields are mandatory.
+      "peerID":"Qma7rzaZUYNgqSkhgrQ8dmBhPvBhuGk3W7gm1MnoK2Bj9U",
+      "authToken":"mysecrettk",
+      "walletAddr":"f3rpskqryflc2sqzzzu7j2q6fecrkdkv4p2avpf4kyk5u754he7g6cr2rbpmif7pam5oxbme2oyzot4ry3d74q",
+      
+      # This is an optional but *highly recommended* field.
+      # If empty only the relayed address will be used, but for better reliability
+      # is encouraged to open ports and provide additional reachable multiaddresses.
+      "multiAddrs": ["...", "..."], 
+   }
+```
 
 ## Remote signing library
 

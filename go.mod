@@ -13,6 +13,7 @@ require (
 	github.com/libp2p/go-libp2p-core v0.8.5
 	github.com/libp2p/go-libp2p-swarm v0.5.0
 	github.com/multiformats/go-multiaddr v0.3.3
+	github.com/multiformats/go-multibase v0.0.3
 	github.com/multiformats/go-varint v0.0.6
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/viper v1.8.1
@@ -164,7 +165,6 @@ require (
 	github.com/multiformats/go-multiaddr-dns v0.3.1 // indirect
 	github.com/multiformats/go-multiaddr-fmt v0.1.0 // indirect
 	github.com/multiformats/go-multiaddr-net v0.2.0 // indirect
-	github.com/multiformats/go-multibase v0.0.3 // indirect
 	github.com/multiformats/go-multihash v0.0.15 // indirect
 	github.com/multiformats/go-multistream v0.2.2 // indirect
 	github.com/nkovacs/streamquote v0.0.0-20170412213628-49af9bddb229 // indirect
