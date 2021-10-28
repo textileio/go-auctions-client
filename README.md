@@ -134,13 +134,13 @@ Pull requests and bug reports are very welcome ❤️
 This repository falls under the Textile [Code of Conduct](./CODE_OF_CONDUCT.md).
 
 Feel free to get in touch by:
--   [Opening an issue](https://github.com/textileio/bidbot/issues/new)
+-   [Opening an issue](https://github.com/textileio/go-auctions-client/issues/new)
 -   Joining the [public Slack channel](https://slack.textile.io/)
 -   Sending an email to contact@textile.io
 
 ## Changelog
 
-A changelog is published along with each [release](https://github.com/textileio/bidbot/releases).
+A changelog is published along with each [release](https://github.com/textileio/go-auctions-client/releases).
 
 ## License
 
