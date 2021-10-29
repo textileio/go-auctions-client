@@ -87,7 +87,7 @@ func TestProposalSigning(t *testing.T) {
 			err = h2.Connect(ctx, peer.AddrInfo{ID: h1.ID(), Addrs: h1.Addrs()})
 			require.NoError(t, err)
 
-			sig, err := RequestSignatureV1(ctx, h2, test.authToken, test.proposal, h1.ID())
+			sig, err := RequestDealProposalSignatureV1(ctx, h2, test.authToken, test.proposal, h1.ID())
 			if test.err != nil {
 				require.Error(t, err)
 				require.Contains(t, err.Error(), test.err.Error())

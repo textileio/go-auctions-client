@@ -5,8 +5,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/crypto"
 	"github.com/filecoin-project/specs-actors/actors/builtin/market"
+	"github.com/ipfs/go-cid"
 	"github.com/libp2p/go-libp2p-core/host"
 	"github.com/libp2p/go-libp2p-core/peer"
 	pb "github.com/textileio/go-auctions-client/gen/wallet"
@@ -16,25 +18,63 @@ const (
 	maxResponseMessageSize = 100 << 10
 )
 
-// RequestSignatureV1 request a signature for a deal proposal to a remote wallet.
-func RequestSignatureV1(
+// RequestDealProposalSignatureV1 request a signature for a deal proposal to a remote wallet.
+func RequestDealProposalSignatureV1(
 	ctx context.Context,
 	h host.Host,
 	authToken string,
 	proposal market.DealProposal,
-	remoteWallet peer.ID) (*crypto.Signature, error) {
+	rwPeerID peer.ID) (*crypto.Signature, error) {
 	proposalCborBytes := &bytes.Buffer{}
 	if err := proposal.MarshalCBOR(proposalCborBytes); err != nil {
 		return nil, fmt.Errorf("marshaling deal proposal to cbor: %s", err)
 	}
 
-	req := pb.ProposalSigningRequest{
+	req := &pb.SigningRequest{
 		AuthToken:            authToken,
-		FilecoinDealProtocol: filecoinDealProtocolV1,
+		WalletAddress:        proposal.Client.String(),
+		FilecoinDealProtocol: filDealProposalProtocolV1,
 		Payload:              proposalCborBytes.Bytes(),
 	}
 
-	s, err := h.NewStream(ctx, remoteWallet, v1Protocol)
+	sig, err := sendToRemoteWallet(ctx, h, rwPeerID, req)
+	if err != nil {
+		return nil, fmt.Errorf("sending signing request to wallet: %s", err)
+	}
+
+	return sig, nil
+}
+
+// RequestDealStatusSignatureV1 request a signature for a deal status request to a remote wallet.
+func RequestDealStatusSignatureV1(
+	ctx context.Context,
+	h host.Host,
+	authToken string,
+	clientAddr address.Address,
+	proposalCid cid.Cid,
+	rwPeerID peer.ID) (*crypto.Signature, error) {
+	cidb, err := proposalCid.MarshalBinary()
+	if err != nil {
+		return nil, fmt.Errorf("marshaling proposal cid to binary: %s", err)
+	}
+
+	req := &pb.SigningRequest{
+		AuthToken:            authToken,
+		WalletAddress:        clientAddr.String(),
+		FilecoinDealProtocol: filDealStatusProtocol,
+		Payload:              cidb,
+	}
+
+	sig, err := sendToRemoteWallet(ctx, h, rwPeerID, req)
+	if err != nil {
+		return nil, fmt.Errorf("sending signing request to wallet: %s", err)
+	}
+
+	return sig, nil
+}
+
+func sendToRemoteWallet(ctx context.Context, h host.Host, rwPeerID peer.ID, req *pb.SigningRequest) (*crypto.Signature, error) {
+	s, err := h.NewStream(ctx, rwPeerID, v1Protocol)
 	if err != nil {
 		return nil, fmt.Errorf("creating libp2p stream: %s", err)
 	}
@@ -44,11 +84,11 @@ func RequestSignatureV1(
 		}
 	}()
 
-	if err := writeMsg(s, &req); err != nil {
+	if err := writeMsg(s, req); err != nil {
 		return nil, fmt.Errorf("sending deal signing request to stream: %s", err)
 	}
 
-	var res pb.ProposalSigningResponse
+	var res pb.SigningResponse
 	if err := readMsg(s, maxResponseMessageSize, &res); err != nil {
 		return nil, fmt.Errorf("unmarshaling proto deal signing response: %s", err)
 	}
