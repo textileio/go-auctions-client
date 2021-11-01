@@ -57,13 +57,12 @@ func NewDealSignerService(h host.Host, authToken string, wallet Wallet) error {
 		authToken: authToken,
 		wallet:    wallet,
 	}
-
-	h.SetStreamHandler(v1Protocol, dss.streamDealProposalHandler)
+	h.SetStreamHandler(v1Protocol, dss.streamHandler)
 
 	return nil
 }
 
-func (dss *dealSignerService) streamDealProposalHandler(s network.Stream) {
+func (dss *dealSignerService) streamHandler(s network.Stream) {
 	log.Infof("handling signing request...")
 	defer func() {
 		if err := s.Close(); err != nil {
