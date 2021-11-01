@@ -2,14 +2,15 @@ syntax = "proto3";
 package proto.wallet;
 option go_package = "github.com/textileio/go-auctions-client/gen/wallet;wallet";
 
-message ProposalSigningRequest {
+message SigningRequest {
 	string auth_token = 1;
 
+	string wallet_address = 4;
 	string filecoin_deal_protocol = 2;
 	bytes payload = 3;
 }
 
-message ProposalSigningResponse {
+message SigningResponse {
 	string error = 1;
 	bytes signature = 2;
 }

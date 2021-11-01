@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"time"
 
+	cborutil "github.com/filecoin-project/go-cbor-util"
 	"github.com/filecoin-project/go-state-types/crypto"
 	"github.com/filecoin-project/specs-actors/actors/builtin/market"
+	"github.com/ipfs/go-cid"
 	"github.com/libp2p/go-libp2p-core/host"
 	"github.com/libp2p/go-libp2p-core/network"
 	pb "github.com/textileio/go-auctions-client/gen/wallet"
@@ -15,13 +17,16 @@ import (
 )
 
 const (
-	v1Protocol            = "/auctions/proposal-signer/1.0.0"
+	v1Protocol = "/auctions/fil-signer/1.0.0"
+
 	maxRequestMessageSize = 100 << 10 // 100KiB
 
-	// filecoinDealProtocolV1 refers exactly to the libp2p protocol used to send deal proposals.
+	// filDealProposalProtocolV1 is the libp2p protocol used to send deal proposals in Filecoin.
 	// This value is used to know how to unmarshal proposal payloads. Future deal proposal versions
 	// might be supported, and thus we need to be able to distinguish them to do proper unmarshaling.
-	filecoinDealProtocolV1 = "/fil/storage/mk/1.1.0"
+	filDealProposalProtocolV1 = "/fil/storage/mk/1.1.0"
+	// filDealStatusProtocol is the libp2p protocol used to send deal status requests in Filecoin.
+	filDealStatusProtocol = "/fil/storage/status/1.1.0"
 )
 
 var (
@@ -58,7 +63,7 @@ func NewDealSignerService(h host.Host, authToken string, wallet Wallet) error {
 }
 
 func (dss *dealSignerService) streamHandler(s network.Stream) {
-	log.Infof("executing stream handler")
+	log.Infof("handling signing request...")
 	defer func() {
 		if err := s.Close(); err != nil {
 			log.Errorf("closing deal proposal signer stream: %s", err)
@@ -68,7 +73,7 @@ func (dss *dealSignerService) streamHandler(s network.Stream) {
 		log.Errorf("set deadline in stream: %s", err)
 	}
 
-	var req pb.ProposalSigningRequest
+	var req pb.SigningRequest
 	if err := readMsg(s, maxRequestMessageSize, &req); err != nil {
 		replyWithError(s, "unmarshaling proposal signing request: %s", err)
 		return
@@ -78,9 +83,9 @@ func (dss *dealSignerService) streamHandler(s network.Stream) {
 		return
 	}
 
-	var walletAddr string
+	var payloadToBeSigned []byte
 	switch req.FilecoinDealProtocol {
-	case filecoinDealProtocolV1:
+	case filDealProposalProtocolV1:
 		var proposal market.DealProposal
 		if err := proposal.UnmarshalCBOR(bytes.NewReader(req.Payload)); err != nil {
 			replyWithError(s, "unmarshaling proposal payload: %s", err)
@@ -90,13 +95,27 @@ func (dss *dealSignerService) streamHandler(s network.Stream) {
 			replyWithError(s, "validating deal proposal: %s", err)
 			return
 		}
-		walletAddr = proposal.Client.String()
+		log.Infof("signing deal proposal for storage-provider %s", proposal.Provider)
+		payloadToBeSigned = req.Payload
+	case filDealStatusProtocol:
+		var proposalCid cid.Cid
+		if err := proposalCid.UnmarshalBinary(req.Payload); err != nil {
+			replyWithError(s, "unmarshaling proposal cid: %s", err)
+		}
+
+		log.Infof("signing deal status request for proposal %s", proposalCid)
+		propCidCbor, err := cborutil.Dump(proposalCid)
+		if err != nil {
+			replyWithError(s, "marshaling proposal cid to cbor: %s", err)
+			return
+		}
+		payloadToBeSigned = propCidCbor
 	default:
 		replyWithError(s, "unsupported filecoin deal proposal protocol")
 		return
 	}
 
-	sig, err := dss.wallet.Sign(walletAddr, req.Payload)
+	sig, err := dss.wallet.Sign(req.WalletAddress, payloadToBeSigned)
 	if err != nil {
 		replyWithError(s, "signing proposal: %s", err)
 		return
@@ -106,14 +125,14 @@ func (dss *dealSignerService) streamHandler(s network.Stream) {
 		replyWithError(s, "marshaling signature: %s", err)
 		return
 	}
-	res := pb.ProposalSigningResponse{
+	res := pb.SigningResponse{
 		Signature: sigBytes,
 	}
 	if err := writeMsg(s, &res); err != nil {
 		log.Errorf("writing error response to stream: %s", err)
 		return
 	}
-	log.Infof("stream handler executed successfully")
+	log.Infof("request signed successfully")
 }
 
 func (dss *dealSignerService) validateDealProposalV1(proposal market.DealProposal) error {
@@ -132,7 +151,7 @@ func replyWithError(s network.Stream, format string, params ...interface{}) {
 	str := fmt.Sprintf(format, params...)
 	log.Errorf(str)
 
-	res := &pb.ProposalSigningResponse{
+	res := &pb.SigningResponse{
 		Error: str,
 	}
 	if err := writeMsg(s, res); err != nil {
