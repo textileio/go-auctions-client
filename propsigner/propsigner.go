@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	cborutil "github.com/filecoin-project/go-cbor-util"
 	"github.com/filecoin-project/go-state-types/crypto"
 	"github.com/filecoin-project/specs-actors/actors/builtin/market"
 	"github.com/ipfs/go-cid"
@@ -83,6 +84,7 @@ func (dss *dealSignerService) streamDealProposalHandler(s network.Stream) {
 		return
 	}
 
+	var payloadToBeSigned []byte
 	switch req.FilecoinDealProtocol {
 	case filDealProposalProtocolV1:
 		var proposal market.DealProposal
@@ -95,6 +97,7 @@ func (dss *dealSignerService) streamDealProposalHandler(s network.Stream) {
 			return
 		}
 		log.Infof("signing deal proposal for storage-provider %s", proposal.Provider)
+		payloadToBeSigned = req.Payload
 	case filDealStatusProtocol:
 		var proposalCid cid.Cid
 		if err := proposalCid.UnmarshalBinary(req.Payload); err != nil {
@@ -102,12 +105,18 @@ func (dss *dealSignerService) streamDealProposalHandler(s network.Stream) {
 		}
 
 		log.Infof("signing deal status request for proposal %s", proposalCid)
+		propCidCbor, err := cborutil.Dump(proposalCid)
+		if err != nil {
+			replyWithError(s, "marshaling proposal cid to cbor: %s", err)
+			return
+		}
+		payloadToBeSigned = propCidCbor
 	default:
 		replyWithError(s, "unsupported filecoin deal proposal protocol")
 		return
 	}
 
-	sig, err := dss.wallet.Sign(req.WalletAddress, req.Payload)
+	sig, err := dss.wallet.Sign(req.WalletAddress, payloadToBeSigned)
 	if err != nil {
 		replyWithError(s, "signing proposal: %s", err)
 		return

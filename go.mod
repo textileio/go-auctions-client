@@ -5,6 +5,7 @@ go 1.17
 require (
 	github.com/filecoin-project/go-address v0.0.5
 	github.com/filecoin-project/go-cbor-util v0.0.0-20191219014500-08c40a1e63a2
+	github.com/filecoin-project/go-fil-markets v1.13.1
 	github.com/filecoin-project/go-state-types v0.1.1-0.20210915140513-d354ccf10379
 	github.com/filecoin-project/specs-actors v0.9.14
 	github.com/ipfs/go-cid v0.1.0
@@ -49,7 +50,7 @@ require (
 	github.com/filecoin-project/go-amt-ipld/v3 v3.1.0 // indirect
 	github.com/filecoin-project/go-bitfield v0.2.4 // indirect
 	github.com/filecoin-project/go-data-transfer v1.11.1 // indirect
-	github.com/filecoin-project/go-fil-markets v1.13.1 // indirect
+	github.com/filecoin-project/go-ds-versioning v0.1.0 // indirect
 	github.com/filecoin-project/go-hamt-ipld v0.1.5 // indirect
 	github.com/filecoin-project/go-hamt-ipld/v2 v2.0.0 // indirect
 	github.com/filecoin-project/go-hamt-ipld/v3 v3.1.0 // indirect
