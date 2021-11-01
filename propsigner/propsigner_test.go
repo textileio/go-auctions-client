@@ -1,13 +1,11 @@
 package propsigner
 
 import (
-	"bytes"
 	"context"
 	"testing"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/big"
-	"github.com/filecoin-project/go-state-types/crypto"
 	"github.com/filecoin-project/specs-actors/actors/builtin/market"
 	"github.com/ipfs/go-cid"
 	libwal "github.com/jsign/go-filsigner/wallet"
@@ -34,7 +32,7 @@ type testCase struct {
 	err       error
 }
 
-func TestProposalSigning(t *testing.T) {
+func TestDealProposalSigning(t *testing.T) {
 	t.Parallel()
 
 	authToken := "veryhardtokentoguess"
@@ -93,21 +91,42 @@ func TestProposalSigning(t *testing.T) {
 				require.Contains(t, err.Error(), test.err.Error())
 			} else {
 				require.NoError(t, err)
-				requireValidSignature(t, test.proposal, sig)
+				err := ValidateDealProposalSignature(test.proposal, sig)
+				require.NoError(t, err)
 			}
 		})
 	}
 }
 
-func requireValidSignature(t *testing.T, proposal market.DealProposal, sig *crypto.Signature) {
-	msg := &bytes.Buffer{}
-	err := proposal.MarshalCBOR(msg)
+func TestDealStatusSigning(t *testing.T) {
+	t.Parallel()
+
+	authToken := "veryhardtokentoguess"
+	wallet, err := localwallet.New(walletKeys)
 	require.NoError(t, err)
-	sigBytes, err := sig.MarshalBinary()
+	waddr := wallet.GetAddresses()[0]
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Remote wallet libp2p host.
+	h1, err := bhost.NewHost(ctx, swarmt.GenSwarm(t, ctx), nil)
 	require.NoError(t, err)
-	ok, err := libwal.WalletVerify(proposal.Client, msg.Bytes(), sigBytes)
+	err = NewDealSignerService(h1, authToken, wallet)
 	require.NoError(t, err)
-	require.True(t, ok)
+
+	// Client (dealerd) libp2p2 host.
+	h2, err := bhost.NewHost(ctx, swarmt.GenSwarm(t, ctx), nil)
+	require.NoError(t, err)
+	err = h2.Connect(ctx, peer.AddrInfo{ID: h1.ID(), Addrs: h1.Addrs()})
+	require.NoError(t, err)
+
+	propCid, err := cid.Decode("bafyreifydfjfbkcszmeyz72zu66an2lc4glykhrjlq7r7ir75mplwpqoxu")
+	require.NoError(t, err)
+	sig, err := RequestDealStatusSignatureV1(ctx, h2, authToken, waddr, propCid, h1.ID())
+	require.NoError(t, err)
+	err = ValidateDealStatusSignature(waddr, propCid, sig)
+	require.NoError(t, err)
 }
 
 func correctProposalSecp256k1(t *testing.T) market.DealProposal {
