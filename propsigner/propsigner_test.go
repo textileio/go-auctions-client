@@ -74,13 +74,13 @@ func TestDealProposalSigning(t *testing.T) {
 			defer cancel()
 
 			// Remote wallet libp2p host.
-			h1, err := bhost.NewHost(ctx, swarmt.GenSwarm(t, ctx), nil)
+			h1, err := bhost.NewHost(swarmt.GenSwarm(t), nil)
 			require.NoError(t, err)
 			err = NewDealSignerService(h1, authToken, wallet)
 			require.NoError(t, err)
 
 			// Client (dealerd) libp2p2 host.
-			h2, err := bhost.NewHost(ctx, swarmt.GenSwarm(t, ctx), nil)
+			h2, err := bhost.NewHost(swarmt.GenSwarm(t), nil)
 			require.NoError(t, err)
 			err = h2.Connect(ctx, peer.AddrInfo{ID: h1.ID(), Addrs: h1.Addrs()})
 			require.NoError(t, err)
@@ -110,13 +110,13 @@ func TestDealStatusSigning(t *testing.T) {
 	defer cancel()
 
 	// Remote wallet libp2p host.
-	h1, err := bhost.NewHost(ctx, swarmt.GenSwarm(t, ctx), nil)
+	h1, err := bhost.NewHost(swarmt.GenSwarm(t), nil)
 	require.NoError(t, err)
 	err = NewDealSignerService(h1, authToken, wallet)
 	require.NoError(t, err)
 
 	// Client (dealerd) libp2p2 host.
-	h2, err := bhost.NewHost(ctx, swarmt.GenSwarm(t, ctx), nil)
+	h2, err := bhost.NewHost(swarmt.GenSwarm(t), nil)
 	require.NoError(t, err)
 	err = h2.Connect(ctx, peer.AddrInfo{ID: h1.ID(), Addrs: h1.Addrs()})
 	require.NoError(t, err)

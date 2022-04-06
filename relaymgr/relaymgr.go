@@ -9,6 +9,7 @@ import (
 	"github.com/libp2p/go-libp2p-core/host"
 	"github.com/libp2p/go-libp2p-core/network"
 	"github.com/libp2p/go-libp2p-core/peer"
+	circuitv2 "github.com/libp2p/go-libp2p/p2p/protocol/circuitv2/client"
 	"github.com/multiformats/go-multiaddr"
 	logger "github.com/textileio/go-log/v2"
 )
@@ -115,6 +116,13 @@ func (rm *RelayManager) connect() error {
 	}
 	rm.host.ConnManager().Protect(rm.relayAddr.ID, connProtectTag)
 	log.Infof("connected with relay")
+
+	_, err = circuitv2.Reserve(rm.closeCtx, rm.host, peer.AddrInfo{
+		ID: rm.relayAddr.ID,
+	})
+	if err != nil {
+		return fmt.Errorf("reserving relay slot: %s", err)
+	}
 
 	return nil
 }
