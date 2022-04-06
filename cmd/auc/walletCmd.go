@@ -54,8 +54,10 @@ var walletDaemonCmd = &cobra.Command{
 		cli.CheckErrf("decoding private key: %v", err)
 		sk, err := crypto.UnmarshalPrivateKey(key)
 		cli.CheckErrf("unmarshaling private key: %v", err)
+		conmgr, err := connmgr.NewConnManager(10, 20, connmgr.WithGracePeriod(time.Minute))
+		cli.CheckErrf("creating conn manager: %s", err)
 		opts := []libp2p.Option{
-			libp2p.ConnectionManager(connmgr.NewConnManager(10, 20, time.Minute)),
+			libp2p.ConnectionManager(conmgr),
 			libp2p.Identity(sk),
 		}
 		if v.GetString("listen-maddr") != "" {
@@ -64,7 +66,7 @@ var walletDaemonCmd = &cobra.Command{
 			opts = append(opts, libp2p.ListenAddrs(listenMaddr))
 		}
 
-		h, err := libp2p.New(c.Context(), opts...)
+		h, err := libp2p.New(opts...)
 		cli.CheckErrf("creating libp2p host: %s", err)
 		printHostInfo(h)
 
