@@ -12,6 +12,7 @@ import (
 	"github.com/ipfs/go-cid"
 	"github.com/jsign/go-filsigner/wallet"
 	"github.com/libp2p/go-libp2p-core/host"
+	"github.com/libp2p/go-libp2p-core/network"
 	"github.com/libp2p/go-libp2p-core/peer"
 	pb "github.com/textileio/go-auctions-client/gen/wallet"
 )
@@ -88,7 +89,7 @@ func sendToRemoteWallet(
 	h host.Host,
 	rwPeerID peer.ID,
 	req *pb.SigningRequest) (*crypto.Signature, error) {
-	s, err := h.NewStream(ctx, rwPeerID, v1Protocol)
+	s, err := h.NewStream(network.WithUseTransient(ctx, "relayed"), rwPeerID, v1Protocol)
 	if err != nil {
 		return nil, fmt.Errorf("creating libp2p stream: %s", err)
 	}
