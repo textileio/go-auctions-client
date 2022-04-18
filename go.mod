@@ -20,7 +20,7 @@ require (
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/viper v1.8.1
 	github.com/stretchr/testify v1.7.0
-	github.com/textileio/cli v1.0.1
+	github.com/textileio/cli v1.0.2
 	github.com/textileio/go-log/v2 v2.1.3-gke-2
 	google.golang.org/protobuf v1.27.1
 )
