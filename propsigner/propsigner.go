@@ -9,6 +9,7 @@ import (
 	cborutil "github.com/filecoin-project/go-cbor-util"
 	"github.com/filecoin-project/go-state-types/crypto"
 	"github.com/filecoin-project/specs-actors/actors/builtin/market"
+	"github.com/google/uuid"
 	"github.com/ipfs/go-cid"
 	"github.com/libp2p/go-libp2p-core/host"
 	"github.com/libp2p/go-libp2p-core/network"
@@ -98,6 +99,11 @@ func (dss *dealSignerService) streamHandler(s network.Stream) {
 		log.Infof("signing deal proposal for storage-provider %s", proposal.Provider)
 		payloadToBeSigned = req.Payload
 	case filDealStatusProtocol:
+		if _, err := uuid.FromBytes(req.Payload); err == nil {
+			payloadToBeSigned = req.Payload
+			break
+		}
+
 		var proposalCid cid.Cid
 		if err := proposalCid.UnmarshalBinary(req.Payload); err != nil {
 			replyWithError(s, "unmarshaling proposal cid: %s", err)

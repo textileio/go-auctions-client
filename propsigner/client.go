@@ -6,10 +6,8 @@ import (
 	"fmt"
 
 	"github.com/filecoin-project/go-address"
-	cborutil "github.com/filecoin-project/go-cbor-util"
 	"github.com/filecoin-project/go-state-types/crypto"
 	"github.com/filecoin-project/specs-actors/actors/builtin/market"
-	"github.com/ipfs/go-cid"
 	"github.com/jsign/go-filsigner/wallet"
 	"github.com/libp2p/go-libp2p-core/host"
 	"github.com/libp2p/go-libp2p-core/peer"
@@ -57,27 +55,18 @@ func RequestDealStatusSignatureV1(
 	h host.Host,
 	authToken string,
 	walletAddr string,
-	propCid cid.Cid,
+	payload []byte,
 	rwPeerID peer.ID) (*crypto.Signature, error) {
-	cidb, err := propCid.MarshalBinary()
-	if err != nil {
-		return nil, fmt.Errorf("marshaling proposal cid to binary: %s", err)
-	}
-
 	req := &pb.SigningRequest{
 		AuthToken:            authToken,
 		WalletAddress:        walletAddr,
 		FilecoinDealProtocol: filDealStatusProtocol,
-		Payload:              cidb,
+		Payload:              payload,
 	}
 
 	sig, err := sendToRemoteWallet(ctx, h, rwPeerID, req)
 	if err != nil {
 		return nil, fmt.Errorf("sending signing request to wallet: %s", err)
-	}
-
-	if err := ValidateDealStatusSignature(walletAddr, propCid, sig); err != nil {
-		return nil, fmt.Errorf("validating signature: %s", err)
 	}
 
 	return sig, nil
@@ -140,12 +129,8 @@ func ValidateDealProposalSignature(proposal market.DealProposal, sig *crypto.Sig
 	return nil
 }
 
-// ValidateDealStatusSignature validates that the signature is valid for the proposal cid.
-func ValidateDealStatusSignature(walletAddr string, propCid cid.Cid, sig *crypto.Signature) error {
-	cidb, err := cborutil.Dump(propCid)
-	if err != nil {
-		return fmt.Errorf("marshaling proposal cid: %s", err)
-	}
+// ValidateDealStatusSignature validates that the signature is valid for the payload.
+func ValidateDealStatusSignature(walletAddr string, payload []byte, sig *crypto.Signature) error {
 	sigBytes, err := sig.MarshalBinary()
 	if err != nil {
 		return fmt.Errorf("marshaling signature: %s", err)
@@ -154,7 +139,7 @@ func ValidateDealStatusSignature(walletAddr string, propCid cid.Cid, sig *crypto
 	if err != nil {
 		return fmt.Errorf("parsing wallet address: %s", err)
 	}
-	ok, err := wallet.WalletVerify(waddr, cidb, sigBytes)
+	ok, err := wallet.WalletVerify(waddr, payload, sigBytes)
 	if err != nil {
 		return fmt.Errorf("verifying signature: %s", err)
 	}

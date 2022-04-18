@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/filecoin-project/go-address"
+	cborutil "github.com/filecoin-project/go-cbor-util"
 	"github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/specs-actors/actors/builtin/market"
 	"github.com/ipfs/go-cid"
@@ -123,9 +124,14 @@ func TestDealStatusSigning(t *testing.T) {
 
 	propCid, err := cid.Decode("bafyreifydfjfbkcszmeyz72zu66an2lc4glykhrjlq7r7ir75mplwpqoxu")
 	require.NoError(t, err)
-	sig, err := RequestDealStatusSignatureV1(ctx, h2, authToken, waddr, propCid, h1.ID())
+	payload, err := propCid.MarshalBinary()
 	require.NoError(t, err)
-	err = ValidateDealStatusSignature(waddr, propCid, sig)
+	sig, err := RequestDealStatusSignatureV1(ctx, h2, authToken, waddr, payload, h1.ID())
+	require.NoError(t, err)
+
+	cborPropCid, err := cborutil.Dump(propCid)
+	require.NoError(t, err)
+	err = ValidateDealStatusSignature(waddr, cborPropCid, sig)
 	require.NoError(t, err)
 }
 

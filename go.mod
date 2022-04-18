@@ -7,6 +7,7 @@ require (
 	github.com/filecoin-project/go-cbor-util v0.0.1
 	github.com/filecoin-project/go-state-types v0.1.3
 	github.com/filecoin-project/specs-actors v0.9.14
+	github.com/google/uuid v1.3.0
 	github.com/ipfs/go-cid v0.1.0
 	github.com/jsign/go-filsigner v0.3.2
 	github.com/libp2p/go-libp2p v0.17.0
@@ -78,7 +79,6 @@ require (
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/gopacket v1.1.19 // indirect
-	github.com/google/uuid v1.3.0 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/hannahhoward/cbor-gen-for v0.0.0-20200817222906-ea96cece81f1 // indirect
 	github.com/hannahhoward/go-pubsub v0.0.0-20200423002714-8d62886cc36e // indirect
